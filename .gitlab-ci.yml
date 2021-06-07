@@ -1,0 +1,31 @@
+variables:
+  DOCKER_REGISTRY: registry.gitlab.com
+  APP_NAME: myapp
+  DOCKER_HOST: tcp://docker:2376
+
+
+stages:
+ - package
+ - build
+ 
+
+build:
+  image: maven:3.6.3-openjdk-16
+  stage: package
+  script:
+    - mvn clean package
+
+publish:
+  stage: build
+  image: 
+    name: docker:dind
+    entrypoint: [""]
+  services:
+    - docker:dind
+  before_script:
+   # - docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD registry.gitlab.com
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+  script:
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME:$CI_PIPELINE_IID . 
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    
